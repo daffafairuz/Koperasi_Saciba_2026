@@ -11,9 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pembayaran_anggotas', function (Blueprint $table) {
-            $table->id();
+        Schema::create('pembayaran_anggota', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('nomor_transaksi', 30)->unique();
+            $table->foreignUuid('anggota_id')->constrained('anggota')->restrictOnDelete();
+            $table->timestamp('tanggal_bayar');
+            $table->decimal('total_bayar', 15, 2)->default(0.00);
+            $table->string('metode_bayar', 20);
+            $table->text('catatan')->nullable();
+            $table->foreignUuid('diinput_oleh')->constrained('anggota')->restrictOnDelete();
             $table->timestamps();
+
+            $table->index(['anggota_id', 'tanggal_bayar']);
+            $table->index('tanggal_bayar');
         });
     }
 
@@ -22,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pembayaran_anggotas');
+        Schema::dropIfExists('pembayaran_anggota');
     }
 };

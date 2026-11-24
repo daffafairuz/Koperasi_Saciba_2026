@@ -11,9 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tagihan_simpanan_wajibs', function (Blueprint $table) {
-            $table->id();
+        Schema::create('tagihan_simpanan_wajib', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('anggota_id')->constrained('anggota')->restrictOnDelete();
+            $table->string('periode', 6);
+            $table->decimal('nominal_tagihan', 15, 2)->default(0.00);
+            $table->decimal('nominal_terbayar', 15, 2)->default(0.00);
+            $table->string('status', 20)->default('BELUM_BAYAR');
+            $table->timestamp('tanggal_lunas')->nullable();
             $table->timestamps();
+
+            $table->unique(['anggota_id', 'periode']);
+            $table->index(['periode', 'status']);
         });
     }
 
@@ -22,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tagihan_simpanan_wajibs');
+        Schema::dropIfExists('tagihan_simpanan_wajib');
     }
 };

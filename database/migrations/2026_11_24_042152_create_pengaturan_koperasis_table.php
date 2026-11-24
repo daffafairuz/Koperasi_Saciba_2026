@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengaturan_koperasis', function (Blueprint $table) {
-            $table->id();
+        Schema::create('pengaturan_koperasi', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->decimal('nominal_simpanan_pokok', 15, 2)->default(100000.00);
+            $table->decimal('nominal_simpanan_wajib', 15, 2)->default(50000.00);
+            $table->decimal('persen_margin_barang', 5, 2)->default(15.00);
+            $table->foreignUuid('diperbarui_oleh')->nullable()->constrained('anggota')->restrictOnDelete();
+            $table->timestamp('diperbarui_pada')->nullable();
             $table->timestamps();
         });
     }
@@ -22,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengaturan_koperasis');
+        Schema::dropIfExists('pengaturan_koperasi');
     }
 };

@@ -11,9 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transaksi_kas_usahas', function (Blueprint $table) {
-            $table->id();
+        Schema::create('transaksi_kas_usaha', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('nomor_transaksi', 30)->unique();
+            $table->date('tanggal_transaksi');
+            $table->string('jenis_arus', 20);
+            $table->string('kategori', 100);
+            $table->text('keterangan')->nullable();
+            $table->decimal('nominal', 15, 2)->default(0.00);
+            $table->foreignUuid('diinput_oleh')->constrained('anggota')->restrictOnDelete();
             $table->timestamps();
+
+            $table->index(['tanggal_transaksi', 'jenis_arus']);
+            $table->index('kategori');
         });
     }
 
@@ -22,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transaksi_kas_usahas');
+        Schema::dropIfExists('transaksi_kas_usaha');
     }
 };

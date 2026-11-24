@@ -11,9 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('riwayat_status_anggotas', function (Blueprint $table) {
-            $table->id();
+        Schema::create('riwayat_status_anggota', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('anggota_id')->constrained('anggota')->restrictOnDelete();
+            $table->string('status_sebelumnya', 20);
+            $table->string('status_baru', 20);
+            $table->text('alasan')->nullable();
+            $table->timestamp('tanggal_pengajuan')->nullable();
+            $table->foreignUuid('disetujui_oleh')->nullable()->constrained('anggota')->restrictOnDelete();
+            $table->timestamp('tanggal_disetujui')->nullable();
             $table->timestamps();
+
+            $table->index(['anggota_id', 'created_at']);
         });
     }
 
@@ -22,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('riwayat_status_anggotas');
+        Schema::dropIfExists('riwayat_status_anggota');
     }
 };

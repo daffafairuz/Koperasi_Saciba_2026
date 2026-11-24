@@ -11,9 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('simpanan_anggotas', function (Blueprint $table) {
-            $table->id();
+        Schema::create('simpanan_anggota', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('anggota_id')->unique()->constrained('anggota')->restrictOnDelete();
+            $table->decimal('nominal_simpanan_pokok', 15, 2)->default(0.00);
+            $table->string('status_simpanan_pokok', 20)->default('BELUM_BAYAR');
+            $table->timestamp('tanggal_lunas_pokok')->nullable();
+            $table->decimal('saldo_sw_awal', 15, 2)->default(0.00);
+            $table->decimal('total_simpanan_wajib', 15, 2)->default(0.00);
+            $table->string('periode_sw_terakhir', 6)->nullable();
             $table->timestamps();
+
+            $table->index('status_simpanan_pokok');
+            $table->index('periode_sw_terakhir');
         });
     }
 
@@ -22,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('simpanan_anggotas');
+        Schema::dropIfExists('simpanan_anggota');
     }
 };
