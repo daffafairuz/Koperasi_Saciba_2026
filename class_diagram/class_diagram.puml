@@ -1,0 +1,172 @@
+@startuml ERD_Final_Koperasi_Berkah_Saciba
+
+hide circle
+skinparam linetype ortho
+skinparam roundcorner 8
+skinparam shadowing false
+skinparam class {
+    BackgroundColor #F8FAFC
+    BorderColor #334155
+    HeaderBackgroundColor #a3c6ffff
+    HeaderFontColor #FFFFFF
+    FontSize 12
+}
+
+' ==========================================
+' MODUL 1: PENGATURAN & KEANGGOTAAN
+' ==========================================
+entity "pengaturan_koperasi" as pengaturan {
+- **id** : UUID <<PK>>
+  --
+- nominal_simpanan_pokok : DECIMAL(15,2)
+- nominal_simpanan_wajib : DECIMAL(15,2)
+- persen_margin_barang : DECIMAL(5,2)
+- diperbarui_oleh : UUID <<FK>>
+- diperbarui_pada : TIMESTAMP
+}
+
+entity "anggota" as anggota {
+- **id** : UUID <<PK>>
+  --
+- nomor_anggota : VARCHAR <<UNIQUE>>
+- nama_lengkap : VARCHAR
+- no_hp : VARCHAR <<UNIQUE>>
+- password : VARCHAR
+- peran : ENUM('ADMIN', 'ANGGOTA')
+- status : ENUM('AKTIF', 'KELUAR')
+- wajib_simpanan : BOOLEAN
+- tanggal_gabung : DATE
+    tanggal_keluar : DATE
+}
+
+entity "riwayat_status_anggota" as riwayat_status {
+- **id** : UUID <<PK>>
+  --
+- anggota_id : UUID <<FK>>
+- status_sebelumnya : ENUM('AKTIF', 'KELUAR')
+- status_baru : ENUM('AKTIF', 'KELUAR')
+- alasan : TEXT
+- tanggal_pengajuan : TIMESTAMP
+    disetujui_oleh : UUID <<FK>>
+    tanggal_disetujui : TIMESTAMP
+}
+
+' ==========================================
+' MODUL 2: SIMPANAN ANGGOTA
+' ==========================================
+entity "simpanan_anggota" as simpanan {
+- **id** : UUID <<PK>>
+  --
+- anggota_id : UUID <<FK, UNIQUE>>
+- nominal_simpanan_pokok : DECIMAL(15,2)
+- status_simpanan_pokok : ENUM('BELUM_BAYAR', 'LUNAS')
+    tanggal_lunas_pokok : TIMESTAMP
+- saldo_sw_awal : DECIMAL(15,2)
+- total_simpanan_wajib : DECIMAL(15,2)
+- total_simpanan_akhir : DECIMAL(15,2) <<GENERATED>>
+    periode_sw_terakhir : VARCHAR(6)
+}
+
+entity "tagihan_simpanan_wajib" as tagihan_sw {
+- **id** : UUID <<PK>>
+  --
+- anggota_id : UUID <<FK>>
+- periode : VARCHAR(6) <<UNIQUE_PAIR>>
+- nominal_tagihan : DECIMAL(15,2)
+- nominal_terbayar : DECIMAL(15,2)
+- status : ENUM('BELUM_BAYAR', 'SEBAGIAN', 'LUNAS')
+    tanggal_lunas : TIMESTAMP
+}
+
+' ==========================================
+' MODUL 3: PINJAMAN & CICILAN
+' ==========================================
+entity "pinjaman" as pinjaman {
+- **id** : UUID <<PK>>
+  --
+- nomor_pinjaman : VARCHAR <<UNIQUE>>
+- anggota_id : UUID <<FK>>
+- jenis_pinjaman : ENUM('UANG', 'BARANG')
+    nama_barang : VARCHAR
+- pokok_pinjaman : DECIMAL(15,2)
+- persen_margin : DECIMAL(5,2)
+- total_tagihan : DECIMAL(15,2)
+- sisa_tagihan : DECIMAL(15,2)
+- tenor_bulan : INT
+- cicilan_per_bulan : DECIMAL(15,2)
+- status : ENUM('BERJALAN', 'LUNAS')
+- tanggal_cair : DATE
+}
+
+entity "cicilan_pinjaman" as cicilan {
+- **id** : UUID <<PK>>
+  --
+- pinjaman_id : UUID <<FK>>
+- cicilan_ke : INT
+- jatuh_tempo : DATE
+- nominal_tagihan : DECIMAL(15,2)
+- nominal_terbayar : DECIMAL(15,2)
+- status : ENUM('BELUM_BAYAR', 'SEBAGIAN', 'LUNAS')
+    tanggal_bayar : TIMESTAMP
+}
+
+' ==========================================
+' MODUL 4: PEMBAYARAN & KAS USAHA
+' ==========================================
+entity "pembayaran_anggota" as pembayaran {
+- **id** : UUID <<PK>>
+  --
+- nomor_transaksi : VARCHAR <<UNIQUE>>
+- anggota_id : UUID <<FK>>
+- tanggal_bayar : TIMESTAMP
+- total_bayar : DECIMAL(15,2)
+- metode_bayar : ENUM('TUNAI', 'TRANSFER')
+    catatan : TEXT
+- dicatat_oleh : UUID <<FK>>
+}
+
+entity "detail_pembayaran_anggota" as detail_bayar {
+- **id** : UUID <<PK>>
+  --
+- pembayaran_id : UUID <<FK>>
+- jenis_alokasi : ENUM('SIMPANAN_POKOK', 'SIMPANAN_WAJIB', 'CICILAN_PINJAMAN')
+- referensi_id : UUID
+- nominal_dialokasikan : DECIMAL(15,2)
+}
+
+entity "transaksi_kas_usaha" as kas_usaha {
+- **id** : UUID <<PK>>
+  --
+- nomor_transaksi : VARCHAR <<UNIQUE>>
+- tanggal_transaksi : DATE
+- arus_kas : ENUM('MASUK', 'KELUAR')
+- kategori : VARCHAR
+- keterangan : TEXT
+- nominal : DECIMAL(15,2)
+- dicatat_oleh : UUID <<FK>>
+}
+
+' ==========================================
+' RELASI ANTAR TABEL
+' ==========================================
+anggota ||--o{ pengaturan : "mengubah"
+anggota ||--o{ riwayat_status : "memiliki riwayat"
+anggota ||--o{ riwayat_status : "menyetujui"
+
+anggota ||--|| simpanan : "memiliki 1 dompet"
+anggota ||--o{ tagihan_sw : "ditagih per bulan"
+
+anggota ||--o{ pinjaman : "mengajukan"
+pinjaman ||--|{ cicilan : "dipecah menjadi jadwal"
+
+anggota ||--o{ pembayaran : "melakukan setoran"
+anggota ||--o{ pembayaran : "menginput setoran"
+pembayaran ||--|{ detail_bayar : "dialokasikan ke"
+
+detail_bayar }o--|| simpanan : "melunasi pokok (opsional)"
+detail_bayar }o--|| tagihan_sw : "melunasi SW (opsional)"
+detail_bayar }o--|| cicilan : "melunasi cicilan (opsional)"
+
+anggota ||--o{ kas_usaha : "mencatat kas"
+
+@enduml
