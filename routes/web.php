@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AnggotaController;
+use App\Http\Controllers\Admin\KasUsahaController;
+use App\Http\Controllers\Admin\PembayaranController;
 use App\Http\Controllers\Admin\PengaturanKoperasiController;
+use App\Http\Controllers\Admin\PinjamanController;
 use App\Http\Controllers\Anggota\AnggotaPortalController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +38,33 @@ Route::middleware(['auth', 'active'])->group(function (): void {
                 ->name('pengaturan.index');
             Route::put('/pengaturan', [PengaturanKoperasiController::class, 'update'])
                 ->name('pengaturan.update');
+
+            Route::get('/kas-usaha', [KasUsahaController::class, 'index'])
+                ->name('kas-usaha.index');
+            Route::get('/kas-usaha/create', [KasUsahaController::class, 'create'])
+                ->name('kas-usaha.create');
+            Route::post('/kas-usaha', [KasUsahaController::class, 'store'])
+                ->name('kas-usaha.store');
+
+            Route::get('/pinjaman', [PinjamanController::class, 'index'])
+                ->name('pinjaman.index');
+            Route::get('/pinjaman/create', [PinjamanController::class, 'create'])
+                ->name('pinjaman.create');
+            Route::post('/pinjaman', [PinjamanController::class, 'store'])
+                ->name('pinjaman.store');
+            Route::get('/pinjaman/{pinjaman}', [PinjamanController::class, 'show'])
+                ->name('pinjaman.show');
+
+            Route::get('/pembayaran', [PembayaranController::class, 'index'])
+                ->name('pembayaran.index');
+            Route::get('/pembayaran/create', [PembayaranController::class, 'create'])
+                ->name('pembayaran.create');
+            Route::get('/pembayaran/kewajiban/{anggota}', [PembayaranController::class, 'getKewajibanAnggota'])
+                ->name('pembayaran.kewajiban');
+            Route::post('/pembayaran', [PembayaranController::class, 'store'])
+                ->name('pembayaran.store');
+            Route::get('/pembayaran/{pembayaran}', [PembayaranController::class, 'show'])
+                ->name('pembayaran.show');
         });
 
     // Grup rute portal read-only ANGGOTA (ADMIN juga diizinkan melihat data pribadinya)

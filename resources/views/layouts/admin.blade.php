@@ -23,9 +23,9 @@
             ['label' => 'Dashboard', 'href' => route('admin.dashboard'), 'active' => request()->routeIs('admin.dashboard'), 'ready' => true],
             ['label' => 'Data Anggota', 'href' => route('admin.anggota.index'), 'active' => request()->routeIs('admin.anggota.*'), 'ready' => true],
             ['label' => 'Pengaturan Koperasi', 'href' => route('admin.pengaturan.index'), 'active' => request()->routeIs('admin.pengaturan.*'), 'ready' => true],
-            ['label' => 'Pinjaman', 'href' => '#', 'active' => false, 'ready' => false],
-            ['label' => 'Input Pembayaran', 'href' => '#', 'active' => false, 'ready' => false],
-            ['label' => 'Kas Usaha', 'href' => '#', 'active' => false, 'ready' => false],
+            ['label' => 'Pinjaman', 'href' => route('admin.pinjaman.index'), 'active' => request()->routeIs('admin.pinjaman.*'), 'ready' => true],
+            ['label' => 'Input Pembayaran', 'href' => route('admin.pembayaran.index'), 'active' => request()->routeIs('admin.pembayaran.*'), 'ready' => true],
+            ['label' => 'Kas Usaha', 'href' => route('admin.kas-usaha.index'), 'active' => request()->routeIs('admin.kas-usaha.*'), 'ready' => true],
         ];
     @endphp
 
@@ -41,7 +41,7 @@
         {{-- Sidebar --}}
         <aside
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:inset-auto shrink-0"
+            class="print:hidden fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:inset-auto shrink-0"
         >
             <div class="h-16 px-5 flex items-center justify-between border-b border-slate-800">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 min-w-0">
@@ -110,7 +110,7 @@
 
         {{-- Main Area --}}
         <div class="flex-1 flex flex-col min-w-0">
-            <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-4">
+            <header class="print:hidden h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3 min-w-0">
                     <button
                         type="button"

@@ -7,53 +7,37 @@ use App\Models\PembayaranAnggota;
 use App\Models\Pinjaman;
 use App\Models\RiwayatStatusAnggota;
 use App\Models\SimpananAnggota;
-use App\Models\TransaksiKasUsaha;
 use App\Models\User;
+use App\Services\KasKoperasiService;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
 {
+    public function __construct(
+        private readonly KasKoperasiService $kasKoperasiService,
+    ) {}
+
     /**
      * Menampilkan dashboard utama Admin beserta ringkasan metrik keuangan real-time.
      */
     public function index(): View
     {
-        // 1. Total Kas Koperasi (100% portabel SQLite & PostgreSQL, presisi integer-cent)
-        $totalPembayaranAnggotaCents = $this->toCents(PembayaranAnggota::query()->sum('total_bayar'));
-        $totalKasMasukCents = $this->toCents(
-            TransaksiKasUsaha::query()
-                ->where('jenis_arus', TransaksiKasUsaha::ARUS_MASUK)
-                ->sum('nominal'),
-        );
-        $totalKasKeluarCents = $this->toCents(
-            TransaksiKasUsaha::query()
-                ->where('jenis_arus', TransaksiKasUsaha::ARUS_KELUAR)
-                ->sum('nominal'),
-        );
-        $totalPencairanPinjamanBaruCents = $this->toCents(
-            Pinjaman::query()
-                ->where('is_migrasi', false)
-                ->sum('pokok_pinjaman'),
-        );
-
-        $totalKasKoperasiCents = $totalPembayaranAnggotaCents
-            + $totalKasMasukCents
-            - $totalKasKeluarCents
-            - $totalPencairanPinjamanBaruCents;
+        // 1. Total Kas Koperasi (sumber perhitungan tunggal via KasKoperasiService)
+        $ringkasanKas = $this->kasKoperasiService->ringkasanKas();
 
         // 2. Total Dana Simpanan Anggota (SP LUNAS + total SW seluruh anggota)
-        $totalSimpananPokokLunasCents = $this->toCents(
+        $totalSimpananPokokLunasCents = $this->kasKoperasiService->toCents(
             SimpananAnggota::query()
                 ->where('status_simpanan_pokok', SimpananAnggota::STATUS_POKOK_LUNAS)
                 ->sum('nominal_simpanan_pokok'),
         );
-        $totalSimpananWajibCents = $this->toCents(
+        $totalSimpananWajibCents = $this->kasKoperasiService->toCents(
             SimpananAnggota::query()->sum('total_simpanan_wajib'),
         );
         $totalDanaSimpananCents = $totalSimpananPokokLunasCents + $totalSimpananWajibCents;
 
         // 3. Total Piutang Pinjaman Berjalan
-        $totalPiutangPinjamanCents = $this->toCents(
+        $totalPiutangPinjamanCents = $this->kasKoperasiService->toCents(
             Pinjaman::query()->berjalan()->sum('sisa_tagihan'),
         );
         $jumlahPinjamanBerjalan = Pinjaman::query()->berjalan()->count();
@@ -94,13 +78,13 @@ class AdminDashboardController extends Controller
             ->get();
 
         return view('admin.dashboard', [
-            'totalKasKoperasi' => $this->formatCents($totalKasKoperasiCents),
-            'totalKasMasuk' => $this->formatCents($totalPembayaranAnggotaCents + $totalKasMasukCents),
-            'totalKasKeluar' => $this->formatCents($totalKasKeluarCents + $totalPencairanPinjamanBaruCents),
-            'totalDanaSimpanan' => $this->formatCents($totalDanaSimpananCents),
-            'totalSimpananPokokLunas' => $this->formatCents($totalSimpananPokokLunasCents),
-            'totalSimpananWajib' => $this->formatCents($totalSimpananWajibCents),
-            'totalPiutangPinjaman' => $this->formatCents($totalPiutangPinjamanCents),
+            'totalKasKoperasi' => $ringkasanKas['total_kas_koperasi'],
+            'totalKasMasuk' => $ringkasanKas['total_kas_masuk'],
+            'totalKasKeluar' => $ringkasanKas['total_kas_keluar'],
+            'totalDanaSimpanan' => $this->kasKoperasiService->formatCents($totalDanaSimpananCents),
+            'totalSimpananPokokLunas' => $this->kasKoperasiService->formatCents($totalSimpananPokokLunasCents),
+            'totalSimpananWajib' => $this->kasKoperasiService->formatCents($totalSimpananWajibCents),
+            'totalPiutangPinjaman' => $this->kasKoperasiService->formatCents($totalPiutangPinjamanCents),
             'jumlahPinjamanBerjalan' => $jumlahPinjamanBerjalan,
             'jumlahAnggotaAktif' => $jumlahAnggotaAktif,
             'jumlahAnggotaKeluar' => $jumlahAnggotaKeluar,
@@ -109,15 +93,5 @@ class AdminDashboardController extends Controller
             'pembayaranTerbaru' => $pembayaranTerbaru,
             'anggotaKeluarTerbaru' => $anggotaKeluarTerbaru,
         ]);
-    }
-
-    private function toCents(int|float|string|null $amount): int
-    {
-        return (int) round(((float) ($amount ?? 0)) * 100);
-    }
-
-    private function formatCents(int $cents): string
-    {
-        return number_format($cents / 100, 2, '.', '');
     }
 }
