@@ -11,25 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+        Schema::create('anggota', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('nomor_anggota', 20)->unique();
+            $table->string('nama_lengkap');
+            $table->string('no_hp', 20)->unique();
             $table->string('password');
+            $table->enum('peran', ['ADMIN', 'ANGGOTA'])->default('ANGGOTA');
+            $table->enum('status', ['AKTIF', 'KELUAR'])->default('AKTIF');
+            $table->boolean('wajib_simpanan')->default(true);
+            $table->date('tanggal_gabung');
+            $table->date('tanggal_keluar')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
+        // Sesuaikan tabel sessions bawaan Laravel agar mendukung UUID
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->foreignUuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
