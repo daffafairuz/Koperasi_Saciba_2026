@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AnggotaController;
+use App\Http\Controllers\Admin\PengaturanKoperasiController;
 use App\Http\Controllers\Anggota\AnggotaPortalController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +21,20 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         ->name('admin.')
         ->middleware('role:ADMIN')
         ->group(function (): void {
-            Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+            Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+            Route::resource('anggota', AnggotaController::class)
+                ->parameters(['anggota' => 'anggota'])
+                ->except(['destroy']);
+            Route::patch('/anggota/{anggota}/status', [AnggotaController::class, 'ubahStatus'])
+                ->name('anggota.status');
+            Route::patch('/anggota/{anggota}/reset-password', [AnggotaController::class, 'resetPassword'])
+                ->name('anggota.reset-password');
+
+            Route::get('/pengaturan', [PengaturanKoperasiController::class, 'index'])
+                ->name('pengaturan.index');
+            Route::put('/pengaturan', [PengaturanKoperasiController::class, 'update'])
+                ->name('pengaturan.update');
         });
 
     // Grup rute portal read-only ANGGOTA (ADMIN juga diizinkan melihat data pribadinya)
