@@ -172,4 +172,114 @@ class AnggotaManagementTest extends TestCase
             ->delete('/admin/anggota/'.$siti->id)
             ->assertStatus(405);
     }
+
+    public function test_last_admin_guard_menolak_penurunan_peran_admin_aktif_terakhir(): void
+    {
+        $admin = User::query()->where('nomor_anggota', 'K.10.001')->firstOrFail();
+
+        // Tambahkan 1 Admin berstatus KELUAR untuk memastikan hanya Admin AKTIF yang dihitung
+        User::query()->create([
+            'nomor_anggota' => 'K.10.099',
+            'nama_lengkap' => 'Admin Nonaktif',
+            'no_hp' => '081200000099',
+            'password' => Hash::make('password'),
+            'peran' => User::PERAN_ADMIN,
+            'status' => User::STATUS_KELUAR,
+            'wajib_simpanan' => false,
+            'tanggal_gabung' => '2020-01-01',
+            'tanggal_keluar' => '2025-01-01',
+        ]);
+
+        // Halaman edit menampilkan peringatan & mengunci opsi ANGGOTA
+        $this->actingAs($admin)
+            ->get(route('admin.anggota.edit', $admin))
+            ->assertOk()
+            ->assertSee('Peran tidak dapat diubah menjadi Anggota karena ini adalah satu-satunya akun Admin yang aktif.')
+            ->assertSee('disabled', false);
+
+        // Request update peran menjadi ANGGOTA harus ditolak
+        $response = $this->actingAs($admin)->put(route('admin.anggota.update', $admin), [
+            'nomor_anggota' => $admin->nomor_anggota,
+            'nama_lengkap' => $admin->nama_lengkap,
+            'no_hp' => $admin->no_hp,
+            'peran' => User::PERAN_ANGGOTA,
+            'wajib_simpanan' => '1',
+            'tanggal_gabung' => $admin->tanggal_gabung->toDateString(),
+        ]);
+
+        $response->assertSessionHasErrors([
+            'peran' => 'Peran tidak dapat diubah menjadi Anggota karena ini adalah satu-satunya akun Admin yang aktif.',
+        ]);
+
+        $admin->refresh();
+        $this->assertSame(User::PERAN_ADMIN, $admin->peran);
+    }
+
+    public function test_last_admin_guard_menolak_soft_exit_admin_aktif_terakhir(): void
+    {
+        $admin = User::query()->where('nomor_anggota', 'K.10.001')->firstOrFail();
+
+        // Halaman detail menampilkan peringatan Last-Admin Guard di modal Soft-Exit
+        $this->actingAs($admin)
+            ->get(route('admin.anggota.show', $admin))
+            ->assertOk()
+            ->assertSee('Status keanggotaan tidak dapat dinonaktifkan (KELUAR) karena akun ini adalah satu-satunya Admin yang aktif.');
+
+        $response = $this->actingAs($admin)->patch(route('admin.anggota.status', $admin), [
+            'status_baru' => User::STATUS_KELUAR,
+            'alasan' => 'Mencoba keluar sebagai satu-satunya admin.',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'status_baru' => 'Status keanggotaan tidak dapat dinonaktifkan (KELUAR) karena akun ini adalah satu-satunya Admin yang aktif.',
+        ], null, 'ubahStatus');
+
+        $admin->refresh();
+        $this->assertSame(User::STATUS_AKTIF, $admin->status);
+        $this->assertNull($admin->tanggal_keluar);
+    }
+
+    public function test_perubahan_peran_dan_soft_exit_admin_diizinkan_jika_masih_ada_admin_aktif_lain(): void
+    {
+        $adminUtama = User::query()->where('nomor_anggota', 'K.10.001')->firstOrFail();
+        $adminKedua = User::query()->create([
+            'nomor_anggota' => 'K.10.002',
+            'nama_lengkap' => 'Pengurus Kedua',
+            'no_hp' => '081200000002',
+            'password' => Hash::make('password'),
+            'peran' => User::PERAN_ADMIN,
+            'status' => User::STATUS_AKTIF,
+            'wajib_simpanan' => true,
+            'tanggal_gabung' => '2021-01-10',
+            'tanggal_keluar' => null,
+        ]);
+
+        // 1. Menurunkan peran admin kedua ke ANGGOTA diizinkan karena adminUtama masih aktif
+        $this->actingAs($adminUtama)
+            ->put(route('admin.anggota.update', $adminKedua), [
+                'nomor_anggota' => $adminKedua->nomor_anggota,
+                'nama_lengkap' => $adminKedua->nama_lengkap,
+                'no_hp' => $adminKedua->no_hp,
+                'peran' => User::PERAN_ANGGOTA,
+                'wajib_simpanan' => '1',
+                'tanggal_gabung' => $adminKedua->tanggal_gabung->toDateString(),
+            ])
+            ->assertRedirect(route('admin.anggota.show', $adminKedua));
+
+        $adminKedua->refresh();
+        $this->assertSame(User::PERAN_ANGGOTA, $adminKedua->peran);
+
+        // 2. Promosikan kembali ke ADMIN lalu Soft-Exit adminKedua -> diizinkan
+        $adminKedua->update(['peran' => User::PERAN_ADMIN]);
+
+        $this->actingAs($adminUtama)
+            ->patch(route('admin.anggota.status', $adminKedua), [
+                'status_baru' => User::STATUS_KELUAR,
+                'alasan' => 'Masa kepengurusan berakhir.',
+            ])
+            ->assertRedirect(route('admin.anggota.show', $adminKedua));
+
+        $adminKedua->refresh();
+        $this->assertSame(User::STATUS_KELUAR, $adminKedua->status);
+    }
 }

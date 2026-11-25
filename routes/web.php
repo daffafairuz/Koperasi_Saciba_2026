@@ -38,6 +38,8 @@ Route::middleware(['auth', 'active'])->group(function (): void {
                 ->name('pengaturan.index');
             Route::put('/pengaturan', [PengaturanKoperasiController::class, 'update'])
                 ->name('pengaturan.update');
+            Route::post('/pengaturan/generate-sw', [PengaturanKoperasiController::class, 'generateSwManual'])
+                ->name('pengaturan.generate-sw');
 
             Route::get('/kas-usaha', [KasUsahaController::class, 'index'])
                 ->name('kas-usaha.index');

@@ -91,6 +91,27 @@ class User extends Authenticatable
     }
 
     /**
+     * Menghitung jumlah akun Admin yang saat ini berstatus aktif.
+     */
+    public static function countActiveAdmins(): int
+    {
+        return self::query()
+            ->where('peran', self::PERAN_ADMIN)
+            ->where('status', self::STATUS_AKTIF)
+            ->count();
+    }
+
+    /**
+     * Memeriksa apakah akun ini merupakan satu-satunya Admin yang berstatus aktif.
+     */
+    public function isOnlyActiveAdmin(): bool
+    {
+        return $this->isAdmin()
+            && $this->isAktif()
+            && self::countActiveAdmins() <= 1;
+    }
+
+    /**
      * Scope anggota berstatus aktif.
      *
      * @param  Builder<User>  $query

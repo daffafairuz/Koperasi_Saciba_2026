@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PengaturanKoperasi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -73,5 +74,24 @@ class PengaturanKoperasiController extends Controller
         return redirect()
             ->route('admin.pengaturan.index')
             ->with('success', 'Pengaturan tarif koperasi berhasil diperbarui dan langsung berlaku untuk transaksi baru.');
+    }
+
+    /**
+     * Memicu penerbitan tagihan Simpanan Wajib bulan berjalan secara manual dari Panel Admin.
+     */
+    public function generateSwManual(): RedirectResponse
+    {
+        $periodeBulanIni = now('Asia/Jakarta')->format('Ym');
+
+        Artisan::call('koperasi:generate-tagihan-sw', [
+            '--periode' => $periodeBulanIni,
+        ]);
+
+        $output = trim(Artisan::output());
+        $ringkasanBaris = preg_replace('/\s+/', ' ', $output) ?? 'Penerbitan tagihan SW selesai.';
+
+        return redirect()
+            ->route('admin.pengaturan.index')
+            ->with('success', $ringkasanBaris);
     }
 }

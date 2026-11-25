@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateAnggotaRequest extends FormRequest
 {
@@ -74,6 +75,40 @@ class UpdateAnggotaRequest extends FormRequest
             'peran.in' => 'Peran harus ADMIN atau ANGGOTA.',
             'tanggal_gabung.required' => 'Tanggal gabung wajib diisi.',
             'tanggal_gabung.date' => 'Format tanggal gabung tidak valid.',
+        ];
+    }
+
+    /**
+     * Proteksi Last-Admin Guard saat mengubah peran Admin aktif terakhir menjadi Anggota.
+     *
+     * @return array<int, callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($validator->errors()->has('peran')) {
+                    return;
+                }
+
+                $anggota = $this->route('anggota');
+
+                if (! $anggota instanceof User) {
+                    return;
+                }
+
+                if (
+                    $anggota->isAdmin()
+                    && $anggota->isAktif()
+                    && $this->input('peran') === User::PERAN_ANGGOTA
+                    && User::countActiveAdmins() <= 1
+                ) {
+                    $validator->errors()->add(
+                        'peran',
+                        'Peran tidak dapat diubah menjadi Anggota karena ini adalah satu-satunya akun Admin yang aktif.'
+                    );
+                }
+            },
         ];
     }
 

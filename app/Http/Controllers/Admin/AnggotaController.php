@@ -143,6 +143,7 @@ class AnggotaController extends Controller
 
         return view('admin.anggota.show', [
             'anggota' => $anggota,
+            'isOnlyActiveAdmin' => $anggota->isOnlyActiveAdmin(),
         ]);
     }
 
@@ -153,6 +154,7 @@ class AnggotaController extends Controller
     {
         return view('admin.anggota.edit', [
             'anggota' => $anggota,
+            'isOnlyActiveAdmin' => $anggota->isOnlyActiveAdmin(),
         ]);
     }
 
@@ -191,15 +193,27 @@ class AnggotaController extends Controller
             'alasan.required' => 'Alasan perubahan status wajib diisi untuk catatan audit.',
         ]);
 
-        if ($anggota->id === $request->user()?->id && $validated['status_baru'] === User::STATUS_KELUAR) {
-            return back()
-                ->withErrors(['status_baru' => 'Anda tidak dapat menonaktifkan akun Anda sendiri yang sedang digunakan.'], 'ubahStatus')
-                ->withInput();
-        }
-
         if ($anggota->status === $validated['status_baru']) {
             return back()
                 ->withErrors(['status_baru' => "Anggota sudah berstatus {$anggota->status}."], 'ubahStatus')
+                ->withInput();
+        }
+
+        if (
+            $anggota->isAdmin()
+            && $validated['status_baru'] === User::STATUS_KELUAR
+            && User::countActiveAdmins() <= 1
+        ) {
+            return back()
+                ->withErrors([
+                    'status_baru' => 'Status keanggotaan tidak dapat dinonaktifkan (KELUAR) karena akun ini adalah satu-satunya Admin yang aktif.',
+                ], 'ubahStatus')
+                ->withInput();
+        }
+
+        if ($anggota->id === $request->user()?->id && $validated['status_baru'] === User::STATUS_KELUAR) {
+            return back()
+                ->withErrors(['status_baru' => 'Anda tidak dapat menonaktifkan akun Anda sendiri yang sedang digunakan.'], 'ubahStatus')
                 ->withInput();
         }
 

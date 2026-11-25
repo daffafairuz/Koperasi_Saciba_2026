@@ -5,53 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Portal Anggota') — Koperasi Jasa Berkah Saciba</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                        },
+                        boxShadow: {
+                            xs: '0 1px 2px 0 rgb(9 9 11 / 0.04)',
+                        },
+                    },
+                },
+            };
+        </script>
     @endif
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        [x-cloak] { display: none !important; }
+        body {
+            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+        }
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+<body class="min-h-screen bg-zinc-50 text-zinc-900 antialiased selection:bg-emerald-500/20 selection:text-emerald-900">
     @php
         $user = auth()->user();
         $navItems = [
-            ['label' => 'Beranda', 'route' => 'anggota.dashboard', 'active' => 'anggota.dashboard'],
-            ['label' => 'Simpanan', 'route' => 'anggota.simpanan', 'active' => 'anggota.simpanan'],
-            ['label' => 'Pinjaman', 'route' => 'anggota.pinjaman', 'active' => 'anggota.pinjaman'],
-            ['label' => 'Riwayat', 'route' => 'anggota.riwayat', 'active' => 'anggota.riwayat'],
+            ['label' => 'Beranda', 'route' => 'anggota.dashboard', 'active' => 'anggota.dashboard', 'icon' => 'home'],
+            ['label' => 'Simpanan', 'route' => 'anggota.simpanan', 'active' => 'anggota.simpanan', 'icon' => 'wallet'],
+            ['label' => 'Pinjaman', 'route' => 'anggota.pinjaman', 'active' => 'anggota.pinjaman', 'icon' => 'credit-card'],
+            ['label' => 'Riwayat', 'route' => 'anggota.riwayat', 'active' => 'anggota.riwayat', 'icon' => 'clock'],
         ];
     @endphp
 
-    {{-- Top Header & Desktop Navigation --}}
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-xs">
+    {{-- Frosted Glass Top Header & Desktop Segmented Nav --}}
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-zinc-200/80">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-3">
                 <a href="{{ route('anggota.dashboard') }}" class="flex items-center gap-2.5 min-w-0">
-                    <div class="h-9 w-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
+                    <div class="h-9 w-9 rounded-xl bg-zinc-950 text-emerald-400 flex items-center justify-center shrink-0 shadow-xs ring-1 ring-emerald-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 21h18" />
+                            <path d="M3 10h18" />
+                            <path d="M5 6l7-3 7 3" />
+                            <path d="M4 10v11" />
+                            <path d="M20 10v11" />
+                            <path d="M8 14v3" />
+                            <path d="M12 14v3" />
+                            <path d="M16 14v3" />
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-bold text-slate-900 truncate">Koperasi Jasa Berkah Saciba</p>
-                        <p class="text-xs text-slate-500 truncate">{{ $user->nama_lengkap }} &middot; {{ $user->nomor_anggota }}</p>
+                        <p class="text-sm font-bold tracking-tight text-zinc-950 truncate">Koperasi Jasa Berkah Saciba</p>
+                        <p class="text-xs text-zinc-500 truncate">
+                            {{ $user->nama_lengkap }} &middot; <span class="font-mono tabular-nums text-zinc-600">{{ $user->nomor_anggota }}</span>
+                        </p>
                     </div>
                 </a>
 
-                {{-- Desktop Navigation --}}
-                <nav class="hidden md:flex items-center gap-1" aria-label="Navigasi Portal Anggota">
+                {{-- Desktop Segmented Navigation --}}
+                <nav class="hidden md:flex items-center gap-1 rounded-xl bg-zinc-100/90 border border-zinc-200/70 p-1" aria-label="Navigasi Portal Anggota">
                     @foreach ($navItems as $item)
                         @php $isActive = request()->routeIs($item['active']); @endphp
                         <a
                             href="{{ route($item['route']) }}"
-                            class="px-3.5 py-2 rounded-xl text-sm font-medium transition {{ $isActive ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition {{ $isActive ? 'bg-zinc-900 text-white shadow-xs' : 'text-zinc-600 hover:text-zinc-950' }}"
                         >
-                            {{ $item['label'] }}
+                            @if ($isActive)
+                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                            @endif
+                            <span>{{ $item['label'] }}</span>
                         </a>
                     @endforeach
                 </nav>
@@ -61,13 +100,14 @@
                     @if ($user->isAdmin())
                         <a
                             href="{{ route('admin.dashboard') }}"
-                            class="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition"
+                            class="inline-flex items-center gap-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m12 19-7-7 7-7" />
+                                <path d="M19 12H5" />
                             </svg>
                             <span class="hidden sm:inline">Kembali ke Panel Admin</span>
-                            <span class="sm:hidden">Panel Admin</span>
+                            <span class="sm:hidden">Admin</span>
                         </a>
                     @endif
 
@@ -75,10 +115,12 @@
                         @csrf
                         <button
                             type="submit"
-                            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition cursor-pointer"
+                            class="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-rose-500/10 hover:text-rose-700 hover:border-rose-500/20 transition cursor-pointer"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" x2="9" y1="12" y2="12" />
                             </svg>
                             <span>Keluar</span>
                         </button>
@@ -89,52 +131,52 @@
     </header>
 
     {{-- Main Content --}}
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-10">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 md:pb-12">
         @yield('content')
     </main>
 
-    {{-- Mobile Fixed Bottom Navigation Bar --}}
-    <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 shadow-lg" aria-label="Navigasi Bawah Anggota">
-        <div class="grid grid-cols-4 h-16">
-            <a
-                href="{{ route('anggota.dashboard') }}"
-                class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium {{ request()->routeIs('anggota.dashboard') ? 'text-emerald-600 font-semibold' : 'text-slate-500' }}"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                </svg>
-                <span>Beranda</span>
-            </a>
+    {{-- Mobile Floating Glass Bottom Navigation Bar --}}
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 backdrop-blur-lg bg-white/90 border-t border-zinc-200 shadow-[0_-8px_24px_-12px_rgba(9,9,11,0.12)]" aria-label="Navigasi Bawah Anggota">
+        <div class="grid grid-cols-4 h-16 max-w-md mx-auto">
+            @foreach ($navItems as $item)
+                @php $isActive = request()->routeIs($item['active']); @endphp
+                <a
+                    href="{{ route($item['route']) }}"
+                    class="relative flex flex-col items-center justify-center gap-1 text-[11px] transition {{ $isActive ? 'text-zinc-950 font-semibold' : 'text-zinc-500 hover:text-zinc-800 font-medium' }}"
+                >
+                    @if ($isActive)
+                        <span class="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-500"></span>
+                    @endif
 
-            <a
-                href="{{ route('anggota.simpanan') }}"
-                class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium {{ request()->routeIs('anggota.simpanan') ? 'text-emerald-600 font-semibold' : 'text-slate-500' }}"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
-                </svg>
-                <span>Simpanan</span>
-            </a>
-
-            <a
-                href="{{ route('anggota.pinjaman') }}"
-                class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium {{ request()->routeIs('anggota.pinjaman') ? 'text-emerald-600 font-semibold' : 'text-slate-500' }}"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-                </svg>
-                <span>Pinjaman</span>
-            </a>
-
-            <a
-                href="{{ route('anggota.riwayat') }}"
-                class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium {{ request()->routeIs('anggota.riwayat') ? 'text-emerald-600 font-semibold' : 'text-slate-500' }}"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-                <span>Riwayat</span>
-            </a>
+                    @switch($item['icon'])
+                        @case('home')
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {{ $isActive ? 'text-emerald-600' : 'text-zinc-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+                                <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            </svg>
+                            @break
+                        @case('wallet')
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {{ $isActive ? 'text-emerald-600' : 'text-zinc-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+                                <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+                            </svg>
+                            @break
+                        @case('credit-card')
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {{ $isActive ? 'text-emerald-600' : 'text-zinc-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="20" height="14" x="2" y="5" rx="2" />
+                                <line x1="2" x2="22" y1="10" y2="10" />
+                            </svg>
+                            @break
+                        @case('clock')
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {{ $isActive ? 'text-emerald-600' : 'text-zinc-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            @break
+                    @endswitch
+                    <span>{{ $item['label'] }}</span>
+                </a>
+            @endforeach
         </div>
     </nav>
 </body>
