@@ -28,9 +28,9 @@ class UserSeeder extends Seeder
             $daftarAnggota = [
                 [
                     'nomor_anggota' => 'K.10.001',
-                    'nama_lengkap' => 'Budi Santoso',
-                    'no_hp' => '081200000001',
-                    'password' => $passwordHash,
+                    'nama_lengkap' => 'Sartono',
+                    'no_hp' => '08999910448',
+                    'password' => Hash::make('818181'),
                     'peran' => User::PERAN_ADMIN,
                     'status' => User::STATUS_AKTIF,
                     'wajib_simpanan' => true,
